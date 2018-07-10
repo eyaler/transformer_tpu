@@ -8,14 +8,20 @@ https://github.com/tensorflow/tensor2tensor/blob/master/docs/cloud_tpu.md
 https://github.com/tensorflow/tensor2tensor/blob/master/docs/walkthrough.md
 
 ```
+# install gcloud: https://cloud.google.com/sdk/install
+# or update:
+gcloud components update
+
+# configure local machine
+gcloud auth application-default login
+gcloud config set project myproject
+gcloud config set compute/zone us-central1-f
+
 # create storage bucket (one-time)
 gsutil mb gs://myproject-storage
 
-# install gcloud: https://cloud.google.com/sdk/install
-# or update: gcloud components update
-
-# create VM with disk (disk needed on one VM for data generation)
-gcloud compute instances create myuser-vm2 --machine-type=n1-standard-1 --image-project=ml-images --image-family=tf-1-9 --scopes=cloud-platform --create-disk size=30,type=pd-standard
+# create VM with enough memory for eval and enough disk to prepare data
+gcloud compute instances create myuser-vm2 --machine-type=n1-standard-2 --image-project=ml-images --image-family=tf-1-9 --scopes=cloud-platform --create-disk size=30,type=pd-standard
 
 # ssh to the VM
 # you can find the key under IdentityFile here:
@@ -37,9 +43,11 @@ sudo chmod a+w /mnt/disks/tmp
 # define variables
 export GCS_BUCKET=gs://myproject-storage
 export DATA_DIR=$GCS_BUCKET/t2t/data
-export OUT_DIR=$GCS_BUCKET/t2t/training/transformer_vm2
+export OUT_DIR=$GCS_BUCKET/t2t/training/transformer_$HOSTNAME
+export BEAM_SIZE=4
+export ALPHA=0.6
 
-# generate dataset
+# prepare dataset
 t2t-datagen --problem=translate_ende_wmt32k --data_dir=$DATA_DIR --tmp_dir=/mnt/disks/tmp
 
 ## train on new TPU
@@ -59,7 +67,7 @@ gcloud compute ssh $HOSTNAME-vm
 exit
 
 tmux
-t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=100000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
+t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=300000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
 # note will fail if eval_steps is too high
 
 # run tensorboard
@@ -71,12 +79,13 @@ tensorboard --logdir=gs://myproject-storage/t2t/training --port=8080
 ## test
 echo -e 'Hello world\nGood world' > text.en
 echo -e 'Hallo Welt\nAuf Wiedersehen Welt' > ref-translation.de
-BEAM_SIZE=4
-ALPHA=0.6
 t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=text.en --decode_to_file=translation.en
 cat translation.en
 
-# Evaluate the BLEU score
+# evaluate
+wget https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/newstest2014.en
+wget https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/newstest2014.de
+t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=newstest2014.en --decode_to_file=translation.en
 # Note: Report this BLEU score in papers, not the internal approx_bleu metric.
-t2t-bleu --translation=translation.en --reference=ref-translation.de
+t2t-bleu --translation=translation.en --reference=newstest2014.de
 ```
