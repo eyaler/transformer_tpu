@@ -93,6 +93,7 @@ t2t-bleu --translation=translation.en --reference=newstest2014.de
 BLEU_uncased =  26.36
 BLEU_cased =  25.83
 # which comparable to 27.3 of arxiv.org/abs/1706.03762
+# and what is reported in https://github.com/tensorflow/tensor2tensor
 
 # optional: delete checkpoint files to restart training
 gsutil rm -r $OUT_DIR
