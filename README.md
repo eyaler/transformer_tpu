@@ -7,6 +7,7 @@ https://github.com/tensorflow/tensor2tensor/blob/master/docs/cloud_tpu.md
 
 https://github.com/tensorflow/tensor2tensor/blob/master/docs/walkthrough.md
 
+https://cloud.google.com/tpu/docs/troubleshooting
 ```
 # install gcloud: https://cloud.google.com/sdk/install
 # or update:
@@ -67,7 +68,7 @@ gcloud compute ssh $HOSTNAME-vm
 exit
 
 tmux
-t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=300000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
+t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
 # note will fail if eval_steps is too high
 
 # run tensorboard
@@ -82,10 +83,21 @@ echo -e 'Hallo Welt\nAuf Wiedersehen Welt' > ref-translation.de
 t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=text.en --decode_to_file=translation.en
 cat translation.en
 
-# evaluate
-wget https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/newstest2014.en
-wget https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/newstest2014.de
+# evaluate. make sure to use UNTOKENIZED data
+wget https://raw.githubusercontent.com/tensorflow/models/master/official/transformer/test_data/newstest2014.en
+wget https://raw.githubusercontent.com/tensorflow/models/master/official/transformer/test_data/newstest2014.de
 t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=newstest2014.en --decode_to_file=translation.en
 # Note: Report this BLEU score in papers, not the internal approx_bleu metric.
 t2t-bleu --translation=translation.en --reference=newstest2014.de
+# for 217700 epochs i get:
+BLEU_uncased =  26.36
+BLEU_cased =  25.83
+# which comparable to 27.3 of arxiv.org/abs/1706.03762
+
+# optional: delete checkpoint files to restart training
+gsutil rm -r $OUT_DIR
+
+# optional: delete failed instances to cleanup or to fix errors (e.g. Deadline Exceeded due to trying running concurrent stuff on the same TPU)
+gcloud compute instances delete $HOSTNAME-vm --quiet
+gcloud compute tpus delete $HOSTNAME-tpu --quiet
 ```
