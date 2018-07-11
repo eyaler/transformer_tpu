@@ -65,7 +65,7 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/cloud_tpu.py
 # create passphrase (https://github.com/tensorflow/tensor2tensor/issues/920)
 gcloud compute ssh $HOSTNAME-vm
 # press enter
-# resource not found error is expected 
+# resource not found error is expected
 
 tmux
 t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
