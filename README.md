@@ -60,7 +60,7 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
 # fix TPU code:
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/cloud_tpu.py
 # change all 1-8 and 1.8 to 1-9 and 1.9 respectively
-# add to create_tpu(cls) after --version=%s: --network=default (https://github.com/tensorflow/tensor2tensor/issues/924)
+# add to create_tpu(cls) after --version=%s add: --network=default (https://github.com/tensorflow/tensor2tensor/issues/924)
 
 # create passphrase (https://github.com/tensorflow/tensor2tensor/issues/920)
 gcloud compute ssh $HOSTNAME-vm
