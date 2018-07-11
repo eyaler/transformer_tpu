@@ -94,6 +94,7 @@ BLEU_uncased =  26.60
 BLEU_cased =  26.11
 # which is comparable to 27.3 of arxiv.org/abs/1706.03762
 # as well as 28 for 300,000 epochs as reported in https://github.com/tensorflow/tensor2tensor
+# differences are expected due to TPU and batch size
 
 # you will get the same numbers with sacreBLEU
 sudo pip3 install sacrebleu
