@@ -80,25 +80,34 @@ tensorboard --logdir=gs://myproject-storage/t2t/training --port=8080
 ## test
 echo -e 'Hello world\nGood world' > text.en
 echo -e 'Hallo Welt\nAuf Wiedersehen Welt' > ref-translation.de
-t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=text.en --decode_to_file=translation.en
-cat translation.en
+t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=text.en --decode_to_file=translation.de
+cat translation.de
 
-# evaluate. make sure to use UNTOKENIZED data
+# evaluate. make sure to use UNTOKENIZED data (and see also https://github.com/tensorflow/tensor2tensor/issues/317)
 wget https://raw.githubusercontent.com/tensorflow/models/master/official/transformer/test_data/newstest2014.en
 wget https://raw.githubusercontent.com/tensorflow/models/master/official/transformer/test_data/newstest2014.de
-t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=newstest2014.en --decode_to_file=translation.en
+t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=newstest2014.en --decode_to_file=translation.de
 # Note: Report this BLEU score in papers, not the internal approx_bleu metric.
-t2t-bleu --translation=translation.en --reference=newstest2014.de
+t2t-bleu --translation=translation.de --reference=newstest2014.de
 # for 250,000 epochs i get:
 BLEU_uncased =  26.60
 BLEU_cased =  26.11
-# which comparable to 27.3 of arxiv.org/abs/1706.03762
+# which is comparable to 27.3 of arxiv.org/abs/1706.03762
 # as well as 28 for 300,000 epochs as reported in https://github.com/tensorflow/tensor2tensor
 
-# optional: delete checkpoint files to restart training
+# you will get the same numbers with sacreBLEU
+sudo pip3 install sacrebleu
+sacrebleu -t wmt14 -l en-de --echo src > wmt14-en-de.src
+t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=wmt14-en-de.src --decode_to_file=translation.de
+cat translation.de | sacrebleu -t wmt14/full -l en-de -tok intl -lc
+#BLEU+case.lc+lang.en-de+numrefs.1+smooth.exp+test.wmt14/full+tok.intl+version.1.2.10 = 26.60 58.5/32.3/20.2/13.2 (BP = 1.000 ratio = 1.026 hyp_len = 66350 ref_len = 64676)
+cat translation.de | sacrebleu -t wmt14/full -l en-de -tok intl
+# BLEU+case.mixed+lang.en-de+numrefs.1+smooth.exp+test.wmt14/full+tok.intl+version.1.2.10 = 26.11 57.4/31.7/19.8/12.9 (BP = 1.000 ratio = 1.026 hyp_len = 66350 ref_len = 64676)
+
+# (optional) delete checkpoint files to restart training
 gsutil rm -r $OUT_DIR
 
-# optional: delete failed instances to cleanup or to fix errors (e.g. Deadline Exceeded due to trying running concurrent stuff on the same TPU)
+# (optional) delete failed instances to cleanup or to fix errors (e.g. Deadline Exceeded due to trying running concurrent stuff on the same TPU)
 gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
 ```
