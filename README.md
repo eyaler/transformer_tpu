@@ -1,4 +1,4 @@
-# The rough guide to running transformer on TPU (TF 1.9.0rc2, T2T 1.6.6, 2018-07-09)
+# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-09)
 see also:
 
 https://cloud.google.com/tpu/docs/custom-setup
@@ -89,11 +89,11 @@ wget https://raw.githubusercontent.com/tensorflow/models/master/official/transfo
 t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=newstest2014.en --decode_to_file=translation.en
 # Note: Report this BLEU score in papers, not the internal approx_bleu metric.
 t2t-bleu --translation=translation.en --reference=newstest2014.de
-# for 217700 epochs i get:
-BLEU_uncased =  26.36
-BLEU_cased =  25.83
+# for 250,000 epochs i get:
+BLEU_uncased =  26.60
+BLEU_cased =  26.11
 # which comparable to 27.3 of arxiv.org/abs/1706.03762
-# and what is reported in https://github.com/tensorflow/tensor2tensor
+# as well as 28 for 300,000 epochs as reported in https://github.com/tensorflow/tensor2tensor
 
 # optional: delete checkpoint files to restart training
 gsutil rm -r $OUT_DIR
