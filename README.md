@@ -114,6 +114,7 @@ gcloud compute tpus delete $HOSTNAME-tpu --quiet
 ## (optional) running faster
 # https://cloud.google.com/tpu/docs/performance-guide
 # https://cloud.google.com/tpu/docs/troubleshooting
+# https://arxiv.org/abs/1804.00247
 # https://arxiv.org/abs/1806.00187
 
 # increase batch size
