@@ -63,7 +63,7 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/cloud_tpu.py
 
 # create passphrase (https://github.com/tensorflow/tensor2tensor/issues/920)
 gcloud compute ssh $HOSTNAME-vm
-# press enter
+# press enter twice
 # resource not found error is expected
 
 tmux
