@@ -1,14 +1,9 @@
-# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-09)
-see also:
+### The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-09)
+## see also:
+# https://cloud.google.com/tpu/docs/custom-setup
+# https://github.com/tensorflow/tensor2tensor/blob/master/docs/cloud_tpu.md
+# https://github.com/tensorflow/tensor2tensor/blob/master/docs/walkthrough.md
 
-https://cloud.google.com/tpu/docs/custom-setup
-
-https://github.com/tensorflow/tensor2tensor/blob/master/docs/cloud_tpu.md
-
-https://github.com/tensorflow/tensor2tensor/blob/master/docs/walkthrough.md
-
-https://cloud.google.com/tpu/docs/troubleshooting
-```
 # install gcloud: https://cloud.google.com/sdk/install
 # or update:
 gcloud components update
@@ -19,10 +14,10 @@ gcloud config set project myproject
 gcloud config set compute/zone us-central1-f
 
 # create storage bucket (one-time)
-gsutil mb gs://myproject-storage
+gsutil mb gs://vae-st-storage
 
 # create VM with enough memory for eval and enough disk to prepare data
-gcloud compute instances create myuser-vm2 --machine-type=n1-standard-2 --image-project=ml-images --image-family=tf-1-9 --scopes=cloud-platform --create-disk size=30,type=pd-standard
+gcloud compute instances create eyal-vm2 --machine-type=n1-standard-2 --image-project=ml-images --image-family=tf-1-9 --scopes=cloud-platform --create-disk size=30,type=pd-standard
 
 # ssh to the VM
 # you can find the key under IdentityFile here:
@@ -31,7 +26,7 @@ cat ~/.ssh/config
 
 # configure VM
 sudo apt-get update && sudo apt-get --only-upgrade install kubectl google-cloud-sdk google-cloud-sdk-app-engine-grpc google-cloud-sdk-pubsub-emulator google-cloud-sdk-app-engine-go google-cloud-sdk-datastore-emulator google-cloud-sdk-app-engine-python google-cloud-sdk-cbt google-cloud-sdk-bigtable-emulator google-cloud-sdk-app-engine-python-extras google-cloud-sdk-datalab google-cloud-sdk-app-engine-java
-gcloud config set project myproject
+gcloud config set project vae-st
 gcloud config set compute/zone us-central1-f
 
 # connect disk
@@ -42,7 +37,7 @@ sudo mount -o discard,defaults /dev/sdb /mnt/disks/tmp
 sudo chmod a+w /mnt/disks/tmp
 
 # define variables
-export GCS_BUCKET=gs://myproject-storage
+export GCS_BUCKET=gs://vae-st-storage
 export DATA_DIR=$GCS_BUCKET/t2t/data
 export OUT_DIR=$GCS_BUCKET/t2t/training/transformer_$HOSTNAME
 export BEAM_SIZE=4
@@ -60,7 +55,7 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
 # fix TPU code:
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/cloud_tpu.py
 # change all 1-8 and 1.8 to 1-9 and 1.9 respectively
-# add to create_tpu(cls) after --version=%s add: --network=default (https://github.com/tensorflow/tensor2tensor/issues/924)
+# in create_tpu(cls) after --version=%s add: --network=default (https://github.com/tensorflow/tensor2tensor/issues/924)
 
 # create passphrase (https://github.com/tensorflow/tensor2tensor/issues/920)
 gcloud compute ssh $HOSTNAME-vm
@@ -69,12 +64,12 @@ gcloud compute ssh $HOSTNAME-vm
 
 tmux
 t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
-# note will fail if eval_steps is too high
+# note: will fail if eval_steps is too high
 
 # run tensorboard
 # open console shell by browsing to: https://console.cloud.google.com/cloudshell
 # in the shell:
-tensorboard --logdir=gs://myproject-storage/t2t/training --port=8080
+tensorboard --logdir=gs://vae-st-storage/t2t/training --port=8080
 # click on "web preview" button
 
 ## test
@@ -111,4 +106,25 @@ gsutil rm -r $OUT_DIR
 # (optional) delete failed instances to cleanup or to fix errors (e.g. Deadline Exceeded due to trying running concurrent stuff on the same TPU)
 gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
-```
+
+## (optional) running faster
+# https://cloud.google.com/tpu/docs/performance-guide
+# https://cloud.google.com/tpu/docs/troubleshooting
+# https://arxiv.org/abs/1806.00187
+
+# increase batch size
+sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/models/transformer.py
+# in update_hparams_for_tpu(hparams) change: batch_size = 18432
+
+# change activations and weights to float16
+sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_layers.py
+# in basic_params1() change: activation_dtype="bfloat16" and weight_dtype="bfloat16"
+sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_attention.py
+# in get_timing_signal_1d(...) change: return tf.cast(signal, tf.bfloat16)
+# (https://github.com/tensorflow/tensor2tensor/issues/932)
+
+# note: disable eval to be quicker and prevent memory error
+sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
+# chenge: "schedule", "train"
+
+# delete checkpoints and instances as described above and train
