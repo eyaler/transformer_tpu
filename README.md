@@ -115,6 +115,11 @@ gsutil rm -r $OUT_DIR
 gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
 
+# (optional) profiling
+capture_tpu_profile --tpu=$HOSTNAME-tpu --logdir=$OUT_DIR --duration_ms=10000
+# note: this requires pointing tensorflow to the same logdir (not to a parent dir) 
+tensorboard --logdir=$OUT_DIR
+
 ## (optional) running faster
 # https://cloud.google.com/tpu/docs/performance-guide
 # https://cloud.google.com/tpu/docs/troubleshooting
