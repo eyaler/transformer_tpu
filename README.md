@@ -120,6 +120,8 @@ capture_tpu_profile --tpu=$HOSTNAME-tpu --logdir=$OUT_DIR --duration_ms=10000
 # note: this requires pointing tensorflow to the same logdir (not to a parent dir)
 # (https://github.com/tensorflow/tensorboard/issues/1290)
 tensorboard --logdir=$OUT_DIR
+# note: trace_viewer works on chrome but not on firefox 61
+# (https://github.com/tensorflow/tensorboard/issues/1291)
 
 ## (optional) running faster
 # https://cloud.google.com/tpu/docs/performance-guide
