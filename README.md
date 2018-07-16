@@ -81,8 +81,8 @@ tensorboard --logdir=gs://myproject-storage/t2t/training
 # in your local browser open: IP_OF_VM:6006
 
 ## test
+# predict
 echo -e 'Hello world\nGood world' > text.en
-echo -e 'Hallo Welt\nAuf Wiedersehen Welt' > ref-translation.de
 t2t-decoder --data_dir=$DATA_DIR --problem=translate_ende_wmt32k --model=transformer --hparams_set=transformer_tpu --output_dir=$OUT_DIR --decode_hparams="beam_size=$BEAM_SIZE,alpha=$ALPHA" --decode_from_file=text.en --decode_to_file=translation.de
 cat translation.de
 
