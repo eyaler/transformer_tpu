@@ -116,6 +116,10 @@ gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
 
 # (optional) profiling
+# see also:
+# https://www.youtube.com/watch?v=SxOsJPaxHME
+# https://cloud.google.com/tpu/docs/cloud-tpu-tool
+# https://www.tensorflow.org/versions/master/performance/datasets_performance
 capture_tpu_profile --tpu=$HOSTNAME-tpu --logdir=$OUT_DIR --duration_ms=10000
 # note: this requires pointing tensorflow to the same logdir (not to a parent dir)
 # (https://github.com/tensorflow/tensorboard/issues/1290)
