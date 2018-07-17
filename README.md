@@ -135,17 +135,19 @@ tensorboard --logdir=$OUT_DIR
 
 # increase batch size and change activations and weights to float16
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/models/transformer.py
-# in update_hparams_for_tpu(hparams) change:
-batch_size = 18432
-# and add when training:
-hparams.activation_dtype = "bfloat16"
-hparams.weight_dtype = "bfloat16"
-# for inference (t2t-decode) you will have to remove the bfloat16's
+# in update_hparams_for_tpu(hparams)
+# change: batch_size = 18432
+# add afterwards:
+# hparams.activation_dtype = "bfloat16"
+# hparams.weight_dtype = "bfloat16"
+sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/decoding.py
+# in decode_from_file(...) add in the begining:
+# hparams.activation_dtype = "float32"
+# hparams.weight_dtype = "float32"
 # (https://github.com/tensorflow/tensor2tensor/issues/940)
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_attention.py
 # in add_timing_signal_1d(...) change: return x + tf.cast(signal, x.dtype)
 # (https://github.com/tensorflow/tensor2tensor/issues/932)
-
 # note: disable eval to be quicker and prevent memory error
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
 # change: "schedule", "train"
