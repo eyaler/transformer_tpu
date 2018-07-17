@@ -133,20 +133,22 @@ tensorboard --logdir=$OUT_DIR
 # https://arxiv.org/abs/1804.00247
 # https://arxiv.org/abs/1806.00187
 
-# increase batch size
+# increase batch size and change activations and weights to float16
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/models/transformer.py
-# in update_hparams_for_tpu(hparams) change: batch_size = 18432
-
-# change activations and weights to float16
-sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_layers.py
-# in basic_params1() change: activation_dtype="bfloat16" and weight_dtype="bfloat16"
+# in update_hparams_for_tpu(hparams) change:
+batch_size = 18432
+# and add when training:
+hparams.activation_dtype = "bfloat16"
+hparams.weight_dtype = "bfloat16"
+# for inference (t2t-decode) you will have to remove the bfloat16's
+# (https://github.com/tensorflow/tensor2tensor/issues/940)
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_attention.py
-# in get_timing_signal_1d(...) change: return tf.cast(signal, tf.bfloat16)
+# in add_timing_signal_1d(...) change: return x + tf.cast(signal, x.dtype)
 # (https://github.com/tensorflow/tensor2tensor/issues/932)
 
 # note: disable eval to be quicker and prevent memory error
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
-# chenge: "schedule", "train"
+# change: "schedule", "train"
 
 # delete checkpoints and instances as described above and train
 ```
