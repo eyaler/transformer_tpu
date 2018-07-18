@@ -1,4 +1,4 @@
-# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-09)
+# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-19)
 see also:
 
 https://cloud.google.com/tpu/docs/custom-setup
@@ -49,6 +49,9 @@ export ALPHA=0.6
 
 # prepare dataset
 t2t-datagen --problem=translate_ende_wmt32k --data_dir=$DATA_DIR --tmp_dir=/mnt/disks/tmp
+
+# you may need to grant your TPUs access to the bucket
+# https://cloud.google.com/tpu/docs/storage-buckets
 
 ## train on new TPU
 
@@ -142,7 +145,6 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/models/transformer.
 # hparams.weight_dtype = "bfloat16"
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/utils/decoding.py
 # in decode_from_file(...) add in the begining:
-# hparams.activation_dtype = "float32"
 # hparams.weight_dtype = "float32"
 # (https://github.com/tensorflow/tensor2tensor/issues/940)
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_attention.py
