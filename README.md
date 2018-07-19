@@ -35,6 +35,7 @@ gcloud config set compute/zone us-central1-f
 
 # connect disk
 lsblk
+# we see that the additional disk is named: sdb
 sudo mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
 sudo mkdir -p /mnt/disks/tmp
 sudo mount -o discard,defaults /dev/sdb /mnt/disks/tmp
@@ -70,7 +71,7 @@ gcloud compute ssh $HOSTNAME-vm
 # resource not found error is expected
 
 tmux
-t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=100 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
+t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=1000 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
 # note: will fail if eval_steps is too high
 
 # running tensorboard (solution that works also for windows)
