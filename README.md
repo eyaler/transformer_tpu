@@ -79,7 +79,7 @@ t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translat
 # following https://stackoverflow.com/a/42049234/664456
 # open port in firewall (first time only):
 gcloud compute firewall-rules create tensorboard-port --allow tcp:6006
-# open a new terminal on one of your VM's
+# open a new terminal on one of your VM's (or local machine if linux)
 tmux
 tensorboard --logdir=gs://myproject-storage/t2t/training
 # in your local browser open: IP_OF_VM:6006
