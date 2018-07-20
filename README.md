@@ -73,6 +73,7 @@ gcloud compute ssh $HOSTNAME-vm
 tmux
 t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=1000 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
 # note: will fail if eval_steps is too high
+# (https://github.com/tensorflow/tensor2tensor/issues/933)
 
 # running tensorboard (solution that works also for windows)
 # note: don't try to run it on gcp console shell. it is unusably slow
@@ -152,8 +153,7 @@ sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/layers/common_atten
 # in add_timing_signal_1d(...) change: return x + tf.cast(signal, x.dtype)
 # (https://github.com/tensorflow/tensor2tensor/issues/932)
 # note: disable eval to be quicker and prevent memory error
-sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/bin/t2t_trainer.py
-# change: "schedule", "train"
+# run t2t_trainer with --schedule=train
 
 # delete checkpoints and instances as described above and train
 ```
