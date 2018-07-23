@@ -103,6 +103,7 @@ BLEU_cased =  26.11
 # which is comparable to 27.3 of arxiv.org/abs/1706.03762
 # as well as 28 for 300,000 epochs as reported in https://github.com/tensorflow/tensor2tensor
 # differences are expected due to TPU and batch size
+# training took 24 hours to reach 215,000 steps (could not a find a benchmark to compare to) 
 
 # you will get the same numbers with sacreBLEU
 sudo pip3 install sacrebleu
@@ -116,7 +117,7 @@ cat translation.de | sacrebleu -t wmt14/full -l en-de -tok intl
 # (optional) delete checkpoint files to restart training
 gsutil rm -r $OUT_DIR
 
-# (optional) delete failed instances to cleanup or to fix errors (e.g. Deadline Exceeded due to trying running concurrent stuff on the same TPU)
+# (optional) delete failed instances to cleanup or to fix errors (e.g. "Deadline Exceeded" due to trying running concurrent stuff on the same TPU)
 gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
 
@@ -139,6 +140,10 @@ tensorboard --logdir=$OUT_DIR
 # https://arxiv.org/abs/1806.00187
 
 # increase batch size and change activations and weights to float16
+# note for memory efficiency (from https://cloud.google.com/tpu/docs/troubleshooting):
+# "The total batch size should be a multiple of 64 (8 per TPU core), and feature dimensions should be a multiple of 128,
+# or
+# The total batch size should be a multiple of 1024 (128 per TPU core), and feature dimensions should be a multiple of 8"
 sudo vi /usr/local/lib/python3.5/dist-packages/tensor2tensor/models/transformer.py
 # in update_hparams_for_tpu(hparams)
 # change: batch_size = 18432
