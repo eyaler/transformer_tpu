@@ -22,6 +22,7 @@ gsutil mb gs://myproject-storage
 
 # create VM with enough memory for eval and enough disk to prepare data
 gcloud compute instances create myuser-vm2 --machine-type=n1-standard-2 --image-project=ml-images --image-family=tf-1-9 --scopes=cloud-platform --create-disk size=30,type=pd-standard
+# note: if you reuse a snapshot disk, delete the saved cloud state: rm .t2t/cloud_state/*
 
 # ssh to the VM
 # you can find the key under IdentityFile here:
@@ -103,7 +104,7 @@ BLEU_cased =  26.11
 # which is comparable to 27.3 of arxiv.org/abs/1706.03762
 # as well as 28 for 300,000 epochs as reported in https://github.com/tensorflow/tensor2tensor
 # differences are expected due to TPU and batch size
-# training took 24 hours to reach 215,000 steps (could not a find a benchmark to compare to) 
+# training took 24 hours to reach 215,000 steps (could not a find a benchmark to compare to)
 
 # you will get the same numbers with sacreBLEU
 sudo pip3 install sacrebleu
@@ -117,7 +118,7 @@ cat translation.de | sacrebleu -t wmt14/full -l en-de -tok intl
 # (optional) delete checkpoint files to restart training
 gsutil rm -r $OUT_DIR
 
-# (optional) delete failed instances to cleanup or to fix errors (e.g. "Deadline Exceeded" due to trying running concurrent stuff on the same TPU)
+# (optional) delete failed instances to cleanup or to fix errors (e.g. "Deadline Exceeded" due to trying running concurrent stuff on the same TPU, Some NaN errors)
 gcloud compute instances delete $HOSTNAME-vm --quiet
 gcloud compute tpus delete $HOSTNAME-tpu --quiet
 
