@@ -73,6 +73,8 @@ gcloud compute ssh $HOSTNAME-vm
 
 tmux
 t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=1000 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
+# note that if t2t-trainer is to create a new TPU, you must wait until previous TPU's get their IP's assigned 
+# (https://github.com/tensorflow/tensor2tensor/issues/956)
 # note: will fail if eval_steps is too high
 # (https://github.com/tensorflow/tensor2tensor/issues/933)
 
