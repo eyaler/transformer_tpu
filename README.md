@@ -1,4 +1,4 @@
-# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-19)
+# The rough guide to running transformer on TPU (TF 1.9.0, T2T 1.6.6, 2018-07-27)
 see also:
 
 https://cloud.google.com/tpu/docs/custom-setup
@@ -41,6 +41,7 @@ sudo mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sd
 sudo mkdir -p /mnt/disks/tmp
 sudo mount -o discard,defaults /dev/sdb /mnt/disks/tmp
 sudo chmod a+w /mnt/disks/tmp
+# you will need to mount again if the machine is rebooted
 
 # define variables
 export GCS_BUCKET=gs://myproject-storage
@@ -73,7 +74,7 @@ gcloud compute ssh $HOSTNAME-vm
 
 tmux
 t2t-trainer --model=transformer --hparams_set=transformer_tpu --problem=translate_ende_wmt32k --train_steps=250000 --eval_steps=10 --local_eval_frequency=1000 --data_dir=$DATA_DIR --output_dir=$OUT_DIR --cloud_tpu --cloud_delete_on_done --cloud_skip_confirmation
-# note that if t2t-trainer is to create a new TPU, you must wait until previous TPU's get their IP's assigned 
+# note that if t2t-trainer is to create a new TPU, you must wait until previous TPU's get their IP's assigned
 # (https://github.com/tensorflow/tensor2tensor/issues/956)
 # note: will fail if eval_steps is too high
 # (https://github.com/tensorflow/tensor2tensor/issues/933)
